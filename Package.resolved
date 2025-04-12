@@ -1,0 +1,51 @@
+{
+  "originHash" : "4997e3cbd722ed5ad8fca796618aeadbf25b4642e1dca93f39a608eba804fccf",
+  "pins" : [
+    {
+      "identity" : "elementary",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sliemeobn/elementary",
+      "state" : {
+        "revision" : "5e6a7b5a5d5974e90f679ce4570e1dcfb011734d",
+        "version" : "0.5.2"
+      }
+    },
+    {
+      "identity" : "elementary-css",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sliemeobn/elementary-css",
+      "state" : {
+        "branch" : "main",
+        "revision" : "09fe27eff33704b3f2e93301a3507ddb61b3679b"
+      }
+    },
+    {
+      "identity" : "elementary-dom",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sliemeobn/elementary-dom",
+      "state" : {
+        "branch" : "feature/support-flappy-bird",
+        "revision" : "12a8ed144c488225326e91ecbaac03688bf2c29e"
+      }
+    },
+    {
+      "identity" : "javascriptkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftwasm/JavaScriptKit",
+      "state" : {
+        "revision" : "f4d52190ad1a4011c489165d43d25ae8e321bc4d",
+        "version" : "0.26.2"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax",
+      "state" : {
+        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
+        "version" : "601.0.1"
+      }
+    }
+  ],
+  "version" : 3
+}
