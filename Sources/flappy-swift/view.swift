@@ -3,16 +3,29 @@ import ElementaryDOM
 
 @View
 struct AppView {
+    var content: some View {
+        FlexColumn(align: .center, gap: 8) {
+            MainContent()
+            Footer()
+        }.style(
+            .fontFamily(.monospace),
+            .margin(t: 4)
+        )
+    }
+}
+
+@View
+struct MainContent {
     @State var game = Game()
 
     var content: some View {
         Block(
             .display(.flex),
             .position(.relative),
-            .fontFamily(.monospace),
-            .width(.px(game.gameWidth)),
             .height(.px(game.gameHeight)),
             .minWidth(.px(game.gameHeight)),
+            .width(.px(game.gameWidth)),
+            .maxWidth(.px(game.gameWidth)),
             .overflow(.clip),
             .borderWidth(2),
             .borderStyle("double")
@@ -242,5 +255,27 @@ struct GameOverlay<Wrapped: View> {
             .alignItems(.center),
             .justifyContent(.center)
         )
+    }
+}
+
+@View
+struct Footer {
+    var content: some View {
+        Block(.fontSize(.sm), .color(.foreground), .opacity(0.6), .textAlign(.center), .lineHeight("1.5")) {
+            Paragraph(.fontWeight(.bold)) {
+                "A WebAssembly game written in Swift in ~100 KB."
+            }
+            Paragraph(.margin(t: 2)) {
+                "This is a technical demo of ElementaryDOM and ElementaryCSS DOM-rendering performance."
+            }
+            Paragraph {
+                "Go to "
+                a(.href("https://github.com/sliemeobn/flappy-swift")) { "https://github.com/sliemeobn/flappy-swift" }
+                    .style(.color(.orange))
+                    .style(when: .hover, .textDecoration("underline"))
+
+                " for the source code and more details."
+            }
+        }
     }
 }
