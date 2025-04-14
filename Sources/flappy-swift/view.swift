@@ -20,7 +20,6 @@ struct MainContent {
 
     var content: some View {
         Block(
-            .display(.flex),
             .position(.relative),
             .height(.px(game.gameHeight)),
             .minWidth(.px(game.gameHeight)),
@@ -103,22 +102,27 @@ struct GameModeOverlay {
             .opacity(status == .playing ? 1 : 0)
         )
 
-        Paragraph(
-            .position(.relative),
-            .fontWeight(.bold),
-            .color(.orange),
-            .letterSpacing(isPlaying ? 0 : 3),
-            .fontSize(isPlaying ? .px(30) : .px(50)),
-            .margin(t: isPlaying ? 2 : 30, r: .auto, b: .auto, l: .auto),
-            .borderWidth(isPlaying ? 0 : 1),
-            .borderColor(isPlaying ? .transparent : .orange),
-            .borderStyle("dotted"),
-            .textAlign(.center),
-            .background(.backgroundTransparent),
-            .transition("all 0.7s ease-in-out")
-        ) {
-            "FLAPPY SWIFT"
-        }
+        FlexColumn(align: .center) {
+            Paragraph(
+                .letterSpacing(isPlaying ? 0 : 3),
+                .fontSize(isPlaying ? .px(30) : .px(50)),
+                .borderColor(isPlaying ? .transparent : .orange),
+                .padding(l: 3),
+                .fontWeight(.bold),
+                .color(.orange),
+                .borderWidth(1),
+                .borderStyle("dotted"),
+                .textAlign(.center),
+                .background(.backgroundTransparent),
+                .transition("all 0.7s")
+            ) {
+                "FLAPPY SWIFT"
+            }
+        }.style(
+            .position(.absolute),
+            .inset(t: isPlaying ? 4 : 30, r: 0, b: .auto, l: 0),
+            .transition("all 0.7s")
+        )
 
         Block(.position(.absolute), .inset(0), .display(.flex)) {
             Paragraph(.margin(.auto), .fontSize(.lg), .textAlign(.center), .lineHeight(.em(2))) {
