@@ -9,7 +9,6 @@ extension CSSColor {
 }
 
 extension CSSFontSize {
-    static let xs = CSSFontSize(.rem(0.75))
     static let lg = CSSFontSize(.rem(1.125))
     static let xl = CSSFontSize(.rem(1.25))
     static let xxl = CSSFontSize(.rem(1.5))

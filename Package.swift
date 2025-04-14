@@ -14,7 +14,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "flappy-swift",
+            name: "flappy_swift",
             dependencies: [
                 .product(name: "ElementaryDOM", package: "elementary-dom"),
                 .product(name: "ElementaryCSS", package: "elementary-css"),

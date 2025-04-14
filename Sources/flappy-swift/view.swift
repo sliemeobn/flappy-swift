@@ -42,7 +42,7 @@ struct AppView {
             }
         }
         .receive(GlobalDocument.onKeyDown) { event in
-            if event.key == " " {
+            if event.key.utf8Equals(" ") {
                 onInput()
             }
         }
@@ -108,7 +108,7 @@ struct GameModeOverlay {
         }
 
         Block(.position(.absolute), .inset(0), .display(.flex)) {
-            Paragraph(.margin(.auto), .fontSize(.lg), .textAlign(.center)) {
+            Paragraph(.margin(.auto), .fontSize(.lg), .textAlign(.center), .lineHeight(.em(2))) {
                 switch status {
                 case .new:
                     Text("press space or tap to start")
@@ -118,12 +118,10 @@ struct GameModeOverlay {
                 case .gameOver:
                     Text("GAME OVER")
                         .style(.fontSize(.xxl))
-                    br()
-                    br()
 
+                    br()
                     Text("press space or tap to go again")
                         .style(.opacity(0.6))
-                    br()
                     br()
                     Text("FINAL SCORE: \(score)")
                 }

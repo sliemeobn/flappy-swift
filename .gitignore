@@ -8,4 +8,5 @@ DerivedData/
 .netrc
 .index-build
 .vscode
-elementary.css
+Public/*.wasm
+Public/elementary.css
