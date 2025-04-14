@@ -1,5 +1,5 @@
 {
-  "originHash" : "4997e3cbd722ed5ad8fca796618aeadbf25b4642e1dca93f39a608eba804fccf",
+  "originHash" : "9b4c8facb56ae69ab22c3bdd62ac18613f1d73f0030e6287c4e9f5a3b9bc5ef9",
   "pins" : [
     {
       "identity" : "elementary",
@@ -16,7 +16,7 @@
       "location" : "https://github.com/sliemeobn/elementary-css",
       "state" : {
         "branch" : "main",
-        "revision" : "09fe27eff33704b3f2e93301a3507ddb61b3679b"
+        "revision" : "882c359bbb2244e7a731be8affb55c29827ebf00"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sliemeobn/elementary-dom",
       "state" : {
-        "branch" : "feature/support-flappy-bird",
-        "revision" : "12a8ed144c488225326e91ecbaac03688bf2c29e"
+        "branch" : "main",
+        "revision" : "08ce6be816f05838ae55d200064a9bf7185c152a"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftwasm/JavaScriptKit",
       "state" : {
-        "revision" : "f4d52190ad1a4011c489165d43d25ae8e321bc4d",
-        "version" : "0.26.2"
+        "revision" : "253ab0b4322ad4c99c61e74c3258646408b1974d",
+        "version" : "0.27.0"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
-        "version" : "601.0.1"
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     }
   ],

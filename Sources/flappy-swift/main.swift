@@ -1,3 +1,3 @@
 import ElementaryDOM
 
-GameView().mount(in: .body)
+AppView().mount(in: .body)

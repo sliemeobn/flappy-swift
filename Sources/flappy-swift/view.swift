@@ -2,97 +2,66 @@ import ElementaryCSS
 import ElementaryDOM
 
 @View
-struct GameView {
+struct AppView {
     @State var game = Game()
 
     var content: some View {
         Block(
+            .display(.flex),
             .position(.relative),
-            .width(.px(800)),
-            .height(.px(600)),
-            .background(.gray800)
+            .fontFamily(.monospace),
+            .width(.px(game.gameWidth)),
+            .height(.px(game.gameHeight)),
+            .minWidth(.px(game.gameHeight)),
+            .overflow(.clip),
+            .borderWidth(2),
+            .borderStyle("double")
         ) {
-            GameStateView(game: game.state)
+            Block {
+                GameView(game: game.state)
+            }.style(
+                .opacity(game.mode == .playing ? 1 : 0),
+                .transition("opacity 0.3s ease-in")
+            )
 
-            // Start Game Overlay
-            if game.state.status == .new {
-                Block {
-                    FlexColumn(align: .center, gap: 20) {
-                        Paragraph(.fontSize(.xxl), .color(.white)) {
-                            "Flappy Bird"
+            GameModeOverlay(
+                status: game.mode,
+                score: game.score
+            )
+            .onClick({ _ in
+                onInput()
+            })
+
+            Block {
+                if game.mode == .playing {
+                    EmptyHTML()
+                        .receive(onAnimationFrame) { event in
+                            game.animate(timestamp: event.timestamp)
                         }
-                        button {
-                            "Start Game"
-                        }
-                        .style(
-                            .background(.orange500),
-                            .padding(y: 2, x: 6),
-                            .borderRadius(1),
-                            .color(.white)
-                        )
-                        .onClick { _ in
-                            game.start()
-                        }
-                    }
                 }
-                .style(
-                    .position(.absolute),
-                    .inset(0),
-                    .background(.black60a),
-                    .display(.flex),
-                    .alignItems(.center),
-                    .justifyContent(.center)
-                )
-            } else if game.state.status == .gameOver {
-                Block {
-                    FlexColumn(align: .center, gap: 20) {
-                        Paragraph(.fontSize(.xxl), .color(.white)) {
-                            "Game Over!"
-                        }
-                        button {
-                            "Play Again"
-                        }
-                        .style(
-                            .background(.orange500),
-                            .padding(y: 2, x: 6),
-                            .borderRadius(1),
-                            .color(.white)
-                        )
-                        .onClick { _ in
-                            game.reset()
-                        }
-                    }
-                }
-                .style(
-                    .position(.absolute),
-                    .inset(0),
-                    .background(.black60a),
-                    .display(.flex),
-                    .alignItems(.center),
-                    .justifyContent(.center)
-                )
-            } else if game.state.status == .playing {
-                EmptyHTML()
-                    .receive(onAnimationFrame) { event in
-                        game.animate(timestamp: event.timestamp)
-                    }
             }
         }
         .receive(GlobalDocument.onKeyDown) { event in
             if event.key == " " {
-                if game.state.status == .new {
-                    game.start()
-                } else if game.state.status == .playing {
-                    game.flap()
-                }
+                onInput()
             }
         }
+    }
 
+    func onInput() {
+        switch game.mode {
+        case .new:
+            game.start()
+        case .playing:
+            game.flap()
+        case .gameOver:
+            game.reset()
+        }
     }
 }
 
 @View
-struct GameStateView {
+struct GameView {
     var game: GameState
 
     var content: some View {
@@ -101,26 +70,102 @@ struct GameStateView {
         ForEach(game.obstacles) { obstacle in
             ObstacleView(obstacle: obstacle)
         }
-
-        ScoreView(score: game.score)
     }
 }
 
 @View
+struct GameModeOverlay {
+    var status: GameMode
+    var score: Int
+
+    var isPlaying: Bool {
+        status == .playing
+    }
+
+    var content: some View {
+        Paragraph(.inset(t: 5, l: 5), .position(.absolute)) {
+            "Score: \(score)"
+        }.style(
+            .transition("opacity 0.5s ease-in-out"),
+            .opacity(status == .playing ? 1 : 0)
+        )
+
+        Paragraph(
+            .position(.relative),
+            .fontWeight(.bold),
+            .color(.orange),
+            .letterSpacing(isPlaying ? 0 : 3),
+            .fontSize(isPlaying ? .px(30) : .px(50)),
+            .margin(t: isPlaying ? 2 : 30, r: .auto, b: .auto, l: .auto),
+            .borderWidth(isPlaying ? 0 : 1),
+            .borderColor(isPlaying ? .transparent : .orange),
+            .borderStyle("dotted"),
+            .textAlign(.center),
+            .background(.backgroundTransparent),
+            .transition("all 0.7s ease-in-out")
+        ) {
+            "FLAPPY SWIFT"
+        }
+
+        Block(.position(.absolute), .inset(0), .display(.flex)) {
+            Paragraph(.margin(.auto), .fontSize(.lg), .textAlign(.center)) {
+                switch status {
+                case .new:
+                    Text("press space or tap to start")
+                        .style(.opacity(0.6))
+                case .playing:
+                    EmptyHTML()
+                case .gameOver:
+                    Text("GAME OVER")
+                        .style(.fontSize(.xxl))
+                    br()
+                    br()
+
+                    Text("press space or tap to go again")
+                        .style(.opacity(0.6))
+                    br()
+                    br()
+                    Text("FINAL SCORE: \(score)")
+                }
+            }
+        }
+    }
+}
+@View
 struct BirdView {
     let bird: Bird
 
+    var rotation: Double {
+        min(max((bird.velocity * 100) - 15, -40), 50)
+    }
+
     var content: some View {
-        Block {
-            // Empty content block
-        }
-        .style(
+        Block(
             .position(.absolute),
             .width(.px(Int(bird.frame.width))),
             .height(.px(Int(bird.frame.height))),
-            .background(.yellow500),
-            .inset(t: .px(Int(bird.frame.y)), l: .px(Int(bird.frame.x)))
-        )
+            .inset(t: .px(Int(bird.frame.y)), l: .px(Int(bird.frame.x))),
+            .transform(.rotate(rotation)),
+        ) {
+            pre {
+                ASCIIArt.bird
+            }
+            .style(
+                .inset(t: -2, l: -4),
+                .position(.relative),
+                .fontWeight(.black),
+                .color(.orange),
+                .whiteSpace("pre"),
+                .fontSize(.px(5)),
+                .transform("scale(\(bird.frame.width / 70))"),
+                .lineHeight("1"),
+                .transformOrigin(.topLeft),
+            )
+        }
+        // .style(
+        //     .borderWidth(1),
+        //     .borderColor(.orange)
+        // )
     }
 }
 
@@ -129,27 +174,36 @@ struct ObstacleView {
     let obstacle: Obstacle
 
     var content: some View {
-        Block {
-            // Empty content block
+        Block(.display(.init(rawValue: "contents")), .fontFamily("'Arial Narrow', Arial, sans-serif"), .color(.purple)) {
+            Part(text: obstacle.topText, frame: obstacle.topFrame, isTop: true)
+            Part(text: obstacle.bottomText, frame: obstacle.bottomFrame, isTop: false)
         }
-        .style(
-            .position(.absolute),
-            .width(.px(Int(obstacle.frame.width))),
-            .height(.px(Int(obstacle.gapPosition - obstacle.gapSize / 2))),
-            .background(.green500),
-            .inset(t: 0, l: .px(Int(obstacle.frame.x)))
-        )
+    }
 
-        Block {
-            // Empty content block
+    @View
+    struct Part {
+        let text: String
+        let frame: Rect
+        let isTop: Bool
+
+        var content: some View {
+            Paragraph {
+                text
+            }
+            .style(
+                .position(.absolute),
+                .inset(t: .px(Int(frame.y)), l: .px(Int(frame.x))),
+                .width(.px(Int(frame.width))),
+                .height(.px(Int(frame.height))),
+                .fontSize(.px(Int(frame.width))),
+                .whiteSpace("nowrap"),
+                .transform(.rotate(isTop ? 180 : 0))
+            ).attributes(
+                .style([
+                    "writing-mode": "vertical-lr"
+                ])
+            )
         }
-        .style(
-            .position(.absolute),
-            .width(.px(Int(obstacle.frame.width))),
-            .height(.px(Int(600 - (obstacle.gapPosition + obstacle.gapSize / 2)))),
-            .background(.green500),
-            .inset(t: .px(Int(obstacle.gapPosition + obstacle.gapSize / 2)), l: .px(Int(obstacle.frame.x)))
-        )
     }
 }
 
@@ -163,7 +217,7 @@ struct ScoreView {
         }
         .style(
             .position(.absolute),
-            .inset(t: 20, l: 20),
+            .inset(t: 4, l: 4),
             .color(.white),
             .fontSize(.xl),
             .fontWeight(.bold)
@@ -171,17 +225,24 @@ struct ScoreView {
     }
 }
 
-extension CSSColor {
-    static let black60a: Self = "#00000099"
-    static let orange500: Self = "#F97316"
-    static let green500: Self = "#10B981"
-    static let yellow500: Self = "#F59E0B"
-    static let gray800: Self = "#1F2937"
-}
+@View
+struct GameOverlay<Wrapped: View> {
+    let wrapped: Wrapped
 
-extension CSSFontSize {
-    static let xs = CSSFontSize(.rem(0.75))
-    static let lg = CSSFontSize(.rem(1.125))
-    static let xl = CSSFontSize(.rem(1.25))
-    static let xxl = CSSFontSize(.rem(1.5))
+    init(@HTMLBuilder content: () -> Wrapped) {
+        self.wrapped = content()
+    }
+
+    var content: some View {
+        Block {
+            wrapped
+        }
+        .style(
+            .position(.absolute),
+            .inset(0),
+            .display(.flex),
+            .alignItems(.center),
+            .justifyContent(.center)
+        )
+    }
 }

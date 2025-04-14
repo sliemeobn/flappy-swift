@@ -8,7 +8,7 @@ let package = Package(
     platforms: [.macOS(.v15)],
     products: [],
     dependencies: [
-        .package(url: "https://github.com/sliemeobn/elementary-dom", branch: "feature/support-flappy-bird"),
+        .package(url: "https://github.com/sliemeobn/elementary-dom", branch: "main"),
         .package(url: "https://github.com/sliemeobn/elementary-css", branch: "main"),
         .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1"),
     ],

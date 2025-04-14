@@ -1,49 +1,48 @@
+import Foundation
 import Reactivity
-
-enum GameStatus {
-    case new
-    case playing
-    case gameOver
-}
 
 @Reactive
 final class Game {
     private(set) var state: GameState
+    private(set) var mode: GameMode
+    private(set) var score: Int
 
-    private let gravity: Double = 0.001
-    private let flapForce: Double = -0.3
-    private let obstacleSpeed: Double = 0.1
-    private let obstacleGap: Double = 150.0
-    private let obstacleWidth: Double = 50.0
+    @ReactiveIgnored
     private var lastFrame: Double?
 
+    // Game dimensions
+    let gameWidth = 800
+    let gameHeight = 600
+
+    private let gravity: Double = 0.0008
+    private let flapForce: Double = -0.015
+    private let obstacleSpeed: Double = 0.2
+    private let obstacleGap: Double = 205.0
+    private let obstacleWidth: Double = 40.0
+    private let flapDecayRate: Double = 0.98
+    private let maxUpwardVelocity: Double = -0.5
+
     init() {
-        self.state = GameState(
-            bird: Bird(frame: Rect(x: 100, y: 300, width: 30, height: 30)),
-            obstacles: [],
-            score: 0,
-            status: .new
-        )
+        self.state = GameState()
+        self.mode = .new
+        self.score = 0
     }
 
     func start() {
-        guard state.status == .new else { return }
-        state.status = .playing
+        guard mode == .new else { return }
+        mode = .playing
     }
 
     func flap() {
-        guard state.status == .playing else { return }
-        state.bird.velocity = flapForce
+        guard mode == .playing else { return }
+        state.bird.flapLift = 1.0
     }
 
     func reset() {
         lastFrame = nil
-        state = GameState(
-            bird: Bird(frame: Rect(x: 100, y: 300, width: 30, height: 30)),
-            obstacles: [],
-            score: 0,
-            status: .new
-        )
+        state = GameState()
+        mode = .playing
+        score = 0
     }
 
     func animate(timestamp: Double) {
@@ -53,54 +52,60 @@ final class Game {
         }
         self.lastFrame = timestamp
 
-        guard state.status == .playing else { return }
+        guard mode == .playing else { return }
 
-        let delta = (timestamp - lastFrame)
-
-        print("delta: \(delta)")
+        let delta = timestamp - lastFrame
 
         // Update bird
+        if state.bird.flapLift > 0.0 {
+            let velocityFactor = max(0.0, min(1.0, (state.bird.velocity - maxUpwardVelocity) / -maxUpwardVelocity))
+            state.bird.velocity += flapForce * state.bird.flapLift * velocityFactor * delta
+            let decayFactor = 1.0 - (1.0 - flapDecayRate) * delta
+            state.bird.flapLift *= decayFactor
+            if state.bird.flapLift < 0.001 {
+                state.bird.flapLift = 0.0
+            }
+        }
+
         state.bird.velocity += gravity * delta
         state.bird.frame.y += state.bird.velocity * delta
 
         // Check for collisions with ground or ceiling
-        if state.bird.frame.y <= 0 || state.bird.frame.y + state.bird.frame.height >= 600 {
-            state.status = .gameOver
+        if state.bird.frame.y <= 0 || state.bird.frame.y + state.bird.frame.height >= Double(gameHeight) {
+            mode = .gameOver
             return
         }
 
         // Update obstacles
-        for (index, obstacle) in state.obstacles.enumerated() {
-            state.obstacles[index].frame.x -= obstacleSpeed * delta
+        for obstacle in state.obstacles {
+            // Move both parts of the obstacle
+            obstacle.topFrame.x -= obstacleSpeed * delta
+            obstacle.bottomFrame.x -= obstacleSpeed * delta
 
-            // Check for collision with bird
             if checkCollision(bird: state.bird, obstacle: obstacle) {
-                state.status = .gameOver
+                mode = .gameOver
                 return
             }
 
-            // Check if bird passed obstacle
-            if !obstacle.passed && obstacle.frame.x + obstacle.frame.width < state.bird.frame.x {
-                state.obstacles[index].passed = true
-                state.score += 1
+            if !obstacle.passed && obstacle.topFrame.x + obstacle.topFrame.width < state.bird.frame.x {
+                obstacle.passed = true
+                score += 1
             }
         }
 
         // Remove off-screen obstacles
-        state.obstacles.removeAll { $0.frame.x < -obstacleWidth }
+        state.obstacles.removeAll { $0.topFrame.x < -obstacleWidth }
 
         // Add new obstacles
-        if state.obstacles.isEmpty || state.obstacles.last!.frame.x < 400 {
+        if state.obstacles.isEmpty || state.obstacles.last!.topFrame.x < Double(gameWidth) / 2 {
             addObstacle()
         }
-        print("obstacles: \(state.obstacles.count)")
     }
 
     private func addObstacle() {
-        print("addObstacle")
-        let gapPosition = Double.random(in: 100...400)
+        let gapPosition = Double.random(in: obstacleGap...(Double(gameHeight) - obstacleGap))
         let obstacle = Obstacle(
-            frame: Rect(x: 800, y: 0, width: obstacleWidth, height: 600),
+            frame: Rect(x: Double(gameWidth), y: 0, width: obstacleWidth, height: Double(gameHeight)),
             gapPosition: gapPosition,
             gapSize: obstacleGap
         )
@@ -108,21 +113,7 @@ final class Game {
     }
 
     private func checkCollision(bird: Bird, obstacle: Obstacle) -> Bool {
-        let topObstacleRect = Rect(
-            x: obstacle.frame.x,
-            y: 0,
-            width: obstacle.frame.width,
-            height: obstacle.gapPosition - obstacle.gapSize / 2
-        )
-
-        let bottomObstacleRect = Rect(
-            x: obstacle.frame.x,
-            y: obstacle.gapPosition + obstacle.gapSize / 2,
-            width: obstacle.frame.width,
-            height: 600 - (obstacle.gapPosition + obstacle.gapSize / 2)
-        )
-
-        return bird.frame.intersects(topObstacleRect) || bird.frame.intersects(bottomObstacleRect)
+        bird.frame.intersects(obstacle.topFrame) || bird.frame.intersects(obstacle.bottomFrame)
     }
 }
 
@@ -139,31 +130,79 @@ struct Rect {
 
 @Reactive
 final class Bird {
-    var frame: Rect
-    var velocity: Double = 0.0
+    fileprivate(set) var frame: Rect
+    fileprivate(set) var velocity: Double = 0.0
+    fileprivate(set) var flapLift: Double = 0.0
 
-    init(frame: Rect) {
-        self.frame = frame
+    init() {
+        self.frame = Rect(x: 100, y: 300, width: 100, height: 90)
     }
 }
 
 @Reactive
 final class Obstacle {
-    var frame: Rect
-    var gapPosition: Double
-    var gapSize: Double
-    var passed: Bool = false
+    fileprivate(set) var passed: Bool = false
+    fileprivate(set) var topFrame: Rect
+    fileprivate(set) var bottomFrame: Rect
+    fileprivate(set) var topText: String
+    fileprivate(set) var bottomText: String
+
+    private static let swiftExpressions = [
+        "isolated (any Actor)? = #isolation",
+        "@MainActor func updateUI()",
+        "var content: some HTML",
+        "{ [weak self] in guard let self else { return } }",
+        "if case .success(let value) = result { }",
+        "for (index, element) in array.enumerated()",
+        "array.filter { $0 > 5 }",
+        "array.map { $0 * 2 }",
+        "array.reduce(0, +)",
+        "try! dangerousFunction()",
+        "try? await Task.sleep(for: .seconds(1))",
+        "@_exported import ElementaryDOM",
+        "#if hasFeature(Embedded)",
+        "#if canImport(FoundationEssentials)",
+        "protocol Something: AnyObject",
+        "nonisolated(unsafe) private(set) var value",
+        "<each T>(_ item: repeat each T) -> (repeat each T)",
+        "let range = 1...10",
+        "fatalError(\"unexpected\")",
+        "@Observable final class Model",
+    ]
 
     init(frame: Rect, gapPosition: Double, gapSize: Double) {
-        self.frame = frame
-        self.gapPosition = gapPosition
-        self.gapSize = gapSize
+        self.topFrame = Rect(
+            x: frame.x,
+            y: 0,
+            width: frame.width,
+            height: gapPosition - gapSize / 2
+        )
+
+        self.bottomFrame = Rect(
+            x: frame.x,
+            y: gapPosition + gapSize / 2,
+            width: frame.width,
+            height: frame.height - (gapPosition + gapSize / 2)
+        )
+
+        self.topText = Self.swiftExpressions.randomElement()!
+        self.bottomText = Self.swiftExpressions.randomElement()!
     }
 }
 
-struct GameState {
-    var bird: Bird
-    var obstacles: [Obstacle]
-    var score: Int
-    var status: GameStatus
+@Reactive
+final class GameState {
+    fileprivate(set) var bird: Bird
+    fileprivate(set) var obstacles: [Obstacle]
+
+    init() {
+        self.bird = Bird()
+        self.obstacles = []
+    }
+}
+
+enum GameMode {
+    case new
+    case playing
+    case gameOver
 }

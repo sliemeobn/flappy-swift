@@ -1,0 +1,26 @@
+:root {
+    --color-background: #FFFFFF;
+    --color-foreground: #000000;
+    --color-orange: #ff6b01;
+    --color-purple: #6D28D9;
+    --color-background-transparent: rgba(255, 255, 255, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-background: #000000;
+        --color-foreground: #FFFFFF;
+        --color-orange: #ff6b01;
+        --color-purple: #8c4dfa;
+        --color-background-transparent: rgba(0, 0, 0, 0.6);
+    }
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+}
