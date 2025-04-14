@@ -24,6 +24,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: swiftwasm/setup-swiftwasm@v2
+
       - name: Build
         run: ./build.sh
 
